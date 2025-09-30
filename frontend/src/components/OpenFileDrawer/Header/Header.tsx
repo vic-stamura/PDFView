@@ -1,21 +1,11 @@
 import { useContext, useState } from "react";
-import { Box, Divider } from "@mui/material";
-import {
-  FolderOpen,
-  GitHub,
-  Language,
-  Lock,
-  LockOpen,
-  Restore,
-} from "@mui/icons-material";
-import InputStringDialog from "./InputStringDialog";
+import { Box } from "@mui/material";
+import { Lock, LockOpen, Restore } from "@mui/icons-material";
 import HistoryDialog from "./HistoryDialog";
 import Waiting from "../../dialogs/Waiting";
 import UiContext from "@/contexts/UiContext";
 import ModelContext from "@/contexts/ModelContext/ModelContext";
 import TooltipIconButton from "@/components/common/TooltipIconButton";
-
-const IS_WEB = import.meta.env.MODE === "web";
 
 /**
  * ファイルツリーの上部に表示されるボタンコントロール
@@ -25,11 +15,10 @@ export default function Header({
 }: {
   onSelectPdfById?: (id: string) => void;
 }) {
-  const { model, modelFlags, initialized } = useContext(ModelContext);
-  const { readOnly, setReadOnly, setAlert } = useContext(UiContext);
-  const [openUrl, setOpenUrl] = useState(false);
+  const { modelFlags, initialized } = useContext(ModelContext);
+  const { readOnly, setReadOnly } = useContext(UiContext);
   const [openHistory, setOpenHistory] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading] = useState(false);
 
   const readOnlyIcon = readOnly || modelFlags.isMock;
   const sxButton = { color: "slategray" };
