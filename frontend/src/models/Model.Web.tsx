@@ -39,7 +39,7 @@ export default class ModelWeb implements IModel {
     async function addEntries(
       fileTree: FileTree,
       root: FileTreeEntry,
-      dHandle: FileSystemDirectoryHandle
+      dHandle: FileSystemDirectoryHandle,
     ) {
       // フォルダを追加
       for await (const [name, handle] of dHandle) {
@@ -53,15 +53,19 @@ export default class ModelWeb implements IModel {
         }
       }
       // ファイルを追加（フォルダの後ろに追加する）
+      const names: string[] = [];
       for await (const [name, handle] of dHandle) {
-        if (handle.kind === "file") {
-          if (!name.toLowerCase().endsWith(".pdf")) continue;
-          const path = !root.path ? name : `${root.path}/${name}`;
-          const id = md5(path).substring(0, 10);
-          const entry: FileTreeEntry = { id, path, children: null };
-          root.children?.push(id);
-          fileTree.push(entry);
-        }
+        if (handle.kind !== "file") continue;
+        if (!name.toLowerCase().endsWith(".pdf")) continue;
+        names.push(name);
+      }
+      names.sort(); // 明示的にソートする必要がある
+      for (const name of names) {
+        const path = !root.path ? name : `${root.path}/${name}`;
+        const id = md5(path).substring(0, 10);
+        const entry: FileTreeEntry = { id, path, children: null };
+        root.children?.push(id);
+        fileTree.push(entry);
       }
     }
     // 空ディレクトリがあるとファイルツリー上でPDFファイルとして表示されてしまうので取り除く
@@ -72,7 +76,7 @@ export default class ModelWeb implements IModel {
         for (const entry of fileTree) {
           if (!entry.children) continue;
           entry.children = entry.children.filter((id) =>
-            fileTree.find((e) => e.id === id)
+            fileTree.find((e) => e.id === id),
           );
         }
         if (length === fileTree.length) break;
@@ -100,7 +104,7 @@ export default class ModelWeb implements IModel {
   getFileFromId = async (id: string) => {
     const fileHandle = await this.getFileHandleFromPath(
       this.idToPath(id),
-      false
+      false,
     );
     return await fileHandle.getFile();
   };
@@ -108,7 +112,7 @@ export default class ModelWeb implements IModel {
   getCoverages = async () => {
     try {
       return JSON.parse(
-        await this.getTextFromPath(PATH_COVERAGES)
+        await this.getTextFromPath(PATH_COVERAGES),
       ) as Coverages;
     } catch {
       return GetCoverages_empty();
@@ -139,7 +143,7 @@ export default class ModelWeb implements IModel {
   getAppSettings = async () => {
     try {
       return JSON.parse(
-        await this.getTextFromPath(PATH_SETTINGS)
+        await this.getTextFromPath(PATH_SETTINGS),
       ) as AppSettings;
     } catch {
       return GetAppSettings_default();
@@ -164,7 +168,7 @@ export default class ModelWeb implements IModel {
 
   private getFileHandleFromPath = async (
     path: string,
-    create: boolean
+    create: boolean,
   ): Promise<FileSystemFileHandle> => {
     const breadcrumb = path.split("/");
     const name = breadcrumb.pop();
