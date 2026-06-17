@@ -1,0 +1,31 @@
+import { useState } from "react";
+
+/**
+ * `target` が変更されたときに `onChange` を実行するコンポーネント
+ */
+export function Watch<T>({
+  target,
+  onChange,
+}: {
+  target: T;
+  onChange: (preValue: T) => void;
+}) {
+  const [currentTarget, setCurrentTarget] = useState<T>(target);
+  // target で初期化しておかないと、起動時に👇の処理が実行されてしまう。
+  // そうすると、「コンポーネントのマウント前に setCurrentTarget が実行された」というエラーになる。
+
+  if (currentTarget !== target) {
+    setTimeout(() => {
+      setCurrentTarget(target);
+      onChange(currentTarget);
+    }, 0);
+  }
+  return <></>;
+}
+
+// setTimeout せずに直接 setState すると以下のエラーが出る：
+// Cannot update a component (A) while rendering a different component (B)
+// そのため、atom が変化したときのリレンダー中に setState/setAtom するのは避けるべき。
+// useEffect を使うという手もあるが、カスタムフック由来の関数があると、その関数については
+// useCallback 化しておかないと無限ループになったり、依存配列が冗長になったり、実行タイミングが複雑になる割に、
+// それほどパフォーマンスが良くなるわけでもないので避ける。
